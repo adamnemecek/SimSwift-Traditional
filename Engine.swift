@@ -1,25 +1,10 @@
-/*
-Copyright (c) 2014 Lee Barney
-Permission is hereby granted, free of charge, to any person obtaining a
-copy of this software and associated documentation files (the "Software"),
-to deal in the Software without restriction, including without limitation the
-rights to use, copy, modify, merge, publish, distribute, sublicense,
-and/or sell copies of the Software, and to permit persons to whom the Software
-is furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be
-included in all copies or substantial portions of the Software.
-
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
-INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
-PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
-HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF
-CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE
-OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-
-
-*/
+//
+//  Engine.swift
+//  Swift sim engine
+//
+//  Created by Lee Barney on 6/12/14.
+//  Copyright (c) 2014 Lee Barney. All rights reserved.
+//
 
 import Foundation
 
@@ -40,46 +25,48 @@ class TraditionalEngine{
     }
     
     func insertPresent(an:Event){
-        _insertEvent(an, list:presents)
+        _insertEvent(an, isFuture: false)
     }
     
     func insertFuture(an:Event){
-        _insertEvent(an, list:futures)
+        _insertEvent(an, isFuture: true)
     }
     
-    func _insertEvent(an:Event, list:Array<Event>){
-        if futures.count == 0 {
-            futures.append(an)
+    func _insertEvent(an:Event, isFuture:Bool){
+        var list = isFuture ? futures : presents
+        if list.count == 0 {
+            isFuture ? futures.append(an) : presents.append(an)
             return
         }
-        let first = futures[0]
-        let end = futures.endIndex
+        let first = list[0]
+        let end = list.endIndex
         //Arrays are zero based but endIndex is not zero based.
-        let last = futures[futures.endIndex - 1]
+        let last = list[list.endIndex - 1]
         if an.triggerTime <= first.triggerTime {
-            futures.insert(an, atIndex: 0)
+            list.insert(an, atIndex: 0)
+            isFuture ? futures.insert(an, atIndex: 0) : presents.insert(an, atIndex: 0)
         }
         else if an.triggerTime >= last.triggerTime {
-            futures.append(an)
+            isFuture ? futures.append(an) : presents.append(an)
             
         }
         else {
             var minIndex = 0
-            var maxIndex = futures.count - 1
+            var maxIndex = list.count - 1
             
             while maxIndex >= minIndex {
                 var midIndex = (maxIndex + minIndex) / 2
-                if futures[midIndex].triggerTime > an.triggerTime
-                    && futures[midIndex - 1].triggerTime <= an.triggerTime {
-                        futures.insert(an, atIndex: midIndex)
+                if list[midIndex].triggerTime > an.triggerTime
+                    && list[midIndex - 1].triggerTime <= an.triggerTime {
+                        isFuture ? futures.insert(an, atIndex: midIndex) : presents.insert(an, atIndex: midIndex)
                         return
                 }
-                else if futures[midIndex].triggerTime < an.triggerTime
-                    && futures[midIndex + 1].triggerTime >= an.triggerTime {
-                        futures.insert(an, atIndex: midIndex + 1)
+                else if list[midIndex].triggerTime < an.triggerTime
+                    && list[midIndex + 1].triggerTime >= an.triggerTime {
+                        isFuture ? futures.insert(an, atIndex: midIndex + 1) : presents.insert(an, atIndex: midIndex + 1)
                         return;
                 }
-                else if futures[midIndex].triggerTime < an.triggerTime {
+                else if list[midIndex].triggerTime < an.triggerTime {
                     minIndex = midIndex
                 }
                 else {
